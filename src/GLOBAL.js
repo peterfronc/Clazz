@@ -1,4 +1,4 @@
- /* 
+/* 
  * Copyright @ peter fronc 2013
  * Licensed under LGPL v3 - have fun.
  * https://github.com/peterfronc/Clazz
@@ -29,18 +29,17 @@ Function.prototype.bind = Function.prototype.bind || function (ctx) {
  *					(default is GLOBAL)
  * @param {Boolean} noOverride if object attached should not override existing
  *					 one.
- * @returns {Object} addressed object.
+ * @returns {Object} {package root, addressed object} couple.
  */
 function namespace(path, instance, pckg, noOverride) {
 	var files = path.split("."),
 			//access eval INDIRECT so it is called globally
-			current = GLOBAL.NAMESPACE_BASE ||
-			(function () {
-				return eval("this");
-			}()),
+			current = GLOBAL.NAMESPACE_BASE || GLOBAL,
 			last = null,
 			lastName = null,
 			i;
+
+	var root = current;
 
 	current = pckg || current;
 
@@ -54,7 +53,7 @@ function namespace(path, instance, pckg, noOverride) {
 	last = current;
 	lastName = files[files.length - 1];
 
-	if (instance) {
+	if (instance !== undefined) {
 		if (last[lastName] === undefined || !noOverride) {
 			last[lastName] = instance;
 		}
@@ -62,7 +61,15 @@ function namespace(path, instance, pckg, noOverride) {
 		last[lastName] = last[lastName] || {};
 	}
 
-	return last[lastName];
+	if (instance) {
+		files.splice(files.length - 1, 1);
+		instance.PACKAGE_NAME = files.join(".");
+	}
+
+	return {
+		root: root,
+		object: last
+	};
 }
 
 /**
@@ -80,19 +87,21 @@ function namespace(path, instance, pckg, noOverride) {
  */
 function clazz(path, instance, extendingClass, pckg, config) {
 	namespace(path, instance, pckg, true);
-	if (typeof (extendingClass) === "function") {
-		instance.superclass = extendingClass;
-		instance.prototype = new instance.superclass(config);
-	}
-	var names = path.split(".");
-	if (instance.prototype) {
-		instance.prototype.CLASS_NAME = names[names.length - 1];
-		names.splice(names.length - 1, 1);
-		instance.prototype.PACKAGE_NAME = names.join(".");
-	} else {
-		instance.STATIC_NAME = names[names.length - 1];
-		names.splice(names.length - 1, 1);
-		instance.PACKAGE_NAME = names.join(".");
+	if (instance) {
+		if (typeof (extendingClass) === "function") {
+			instance.superclass = extendingClass;
+			instance.prototype = new instance.superclass(config);
+		}
+		var names = path.split(".");
+		if (instance.prototype) {
+			instance.prototype.CLASS_NAME = names[names.length - 1];
+			names.splice(names.length - 1, 1);
+			instance.prototype.PACKAGE_NAME = names.join(".");
+		} else {
+			instance.STATIC_NAME = names[names.length - 1];
+			names.splice(names.length - 1, 1);
+	//		instance.PACKAGE_NAME = names.join(".");
+		}
 	}
 	return instance;
 }
