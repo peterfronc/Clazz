@@ -1,5 +1,5 @@
 /* 
- * Copyright @ peter fronc 2013
+ * Author @ peter fronc 2013
  * Licensed under LGPL v3 - have fun.
  * https://github.com/peterfronc/Clazz
  */
